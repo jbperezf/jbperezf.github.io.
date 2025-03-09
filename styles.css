@@ -24,6 +24,7 @@ h1 {
 
 .form-group {
     margin-bottom: 20px;
+    width: 100%;
 }
 
 label {
@@ -32,32 +33,42 @@ label {
     font-weight: bold;
 }
 
-input[type="text"], select {
+/* Make all form elements the same width */
+input[type="text"], 
+select, 
+.file-input-container, 
+.file-input-button, 
+.generate-button {
     width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="text"], select {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+    height: 44px; /* Consistent height */
 }
 
 .file-input-container {
     position: relative;
     overflow: hidden;
     display: inline-block;
-    width: 100%;
 }
 
 .file-input-button {
-    border: 1px solid #2c3e50;
-    color: #2c3e50;
+    border: 1px solid #ddd;
+    color: #333;
     background-color: white;
-    padding: 10px 15px;
+    padding: 10px;
     border-radius: 4px;
     font-size: 16px;
     display: inline-block;
     cursor: pointer;
-    width: 100%;
     text-align: center;
+    height: 44px; /* Consistent height */
+    line-height: 24px; /* Center text vertically */
 }
 
 .file-input {
@@ -67,6 +78,8 @@ input[type="text"], select {
     right: 0;
     top: 0;
     cursor: pointer;
+    width: 100%;
+    height: 100%;
 }
 
 .file-name {
@@ -83,9 +96,9 @@ input[type="text"], select {
     font-size: 16px;
     border-radius: 4px;
     cursor: pointer;
-    width: 100%;
     margin-top: 20px;
     transition: background-color 0.3s;
+    height: 48px; /* Slightly taller for better appearance */
 }
 
 .generate-button:hover {
