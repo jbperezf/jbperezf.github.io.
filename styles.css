@@ -22,6 +22,12 @@ h1 {
     margin-bottom: 30px;
 }
 
+h3 {
+    color: #2c3e50;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
 .form-group {
     margin-bottom: 20px;
     width: 100%;
@@ -86,6 +92,41 @@ input[type="text"], select {
     margin-top: 8px;
     font-size: 14px;
     color: #666;
+}
+
+.preview-container {
+    margin-top: 25px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.csv-preview {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.csv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.csv-table th, .csv-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.csv-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.csv-table tr:nth-child(even) {
+    background-color: #f9f9f9;
 }
 
 .generate-button {
