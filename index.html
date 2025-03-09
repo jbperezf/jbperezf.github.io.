@@ -4,96 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HydraulicToolbox Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input[type="text"], select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        .file-input-container {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-        .file-input-button {
-            border: 1px solid #2c3e50;
-            color: #2c3e50;
-            background-color: white;
-            padding: 10px 15px;
-            border-radius: 4px;
-            font-size: 16px;
-            display: inline-block;
-            cursor: pointer;
-            width: 100%;
-            text-align: center;
-        }
-        .file-input {
-            position: absolute;
-            font-size: 100px;
-            opacity: 0;
-            right: 0;
-            top: 0;
-            cursor: pointer;
-        }
-        .file-name {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #666;
-        }
-        .generate-button {
-            background-color: #2c3e50;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            transition: background-color 0.3s;
-        }
-        .generate-button:hover {
-            background-color: #1a2530;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 14px;
-            color: #777;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -131,49 +42,6 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('csvFile').addEventListener('change', function(e) {
-            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-            document.getElementById('fileName').textContent = fileName;
-        });
-        
-        document.getElementById('generateButton').addEventListener('click', function() {
-            const projectName = document.getElementById('projectName').value;
-            const calculationType = document.getElementById('calculationType').value;
-            const csvFile = document.getElementById('csvFile').files[0];
-            
-            if (!projectName || !calculationType || !csvFile) {
-                alert('Please fill all required fields');
-                return;
-            }
-            
-            // Read the CSV file
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const csvContent = e.target.result;
-                
-                // Create a simple .hyd format (this would be replaced with your actual format)
-                const timestamp = new Date().toISOString();
-                const hydContent = `PROJECT: ${projectName}
-CALCULATION_TYPE: ${calculationType}
-TIMESTAMP: ${timestamp}
-CSV_DATA:
-${csvContent}`;
-                
-                // Create and download the .hyd file
-                const blob = new Blob([hydContent], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${projectName.replace(/\s+/g, '_')}.hyd`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            };
-            
-            reader.readAsText(csvFile);
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
