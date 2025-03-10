@@ -3,50 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HydraulicToolbox Generator</title>
+    <title>HydraulicToolbox Utilities</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>HydraulicToolbox Generator</h1>
-        
-        <form id="hydraulicForm">
-            <div class="form-group">
-                <label for="projectName">Project Name:</label>
-                <input type="text" id="projectName" name="projectName" placeholder="Enter project name" required>
+    <button class="menu-button">
+        <span class="hamburger"></span>
+    </button>
+    <div class="app-container">
+        <div class="sidebar">
+            <h2>Tools</h2>
+            <nav>
+                <button class="nav-button active" data-section="generator">HYD File Generator</button>
+                <button class="nav-button" data-section="converter">Report Converter to CSV</button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="help-button" id="helpButton">
+                    <svg width="24" height="24" viewBox="0 0 24 24"></svg>
+                        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                    </svg>
+                    Help - Instructions
+                </button>
             </div>
-            
-            <div class="form-group">
-                <label for="calculationType">Calculation Type:</label>
-                <select id="calculationType" name="calculationType" required>
-                    <option value="" disabled selected>Select calculation type</option>
-                    <option value="channel-analysis">Channel Analysis</option>
-                    <option value="channel-lining-analysis">Channel Lining Analysis</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="csvFile">Input Data (CSV File):</label>
-                <div class="file-input-container">
-                    <div class="file-input-button">Choose CSV File</div>
-                    <input type="file" id="csvFile" name="csvFile" class="file-input" accept=".csv" required>
+        </div>
+
+        <div class="main-content">
+            <section id="generator" class="tool-section active">
+                <h1>HydraulicToolbox File Generator</h1>
+                <div class="tool-content">
+                    <form id="hydraulicForm">
+                        <div class="form-group">
+                            <label for="projectName">Project Name:</label>
+                            <input type="text" id="projectName" name="projectName" placeholder="Enter project name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="calculationType">Calculation Type:</label>
+                            <select id="calculationType" name="calculationType" required disabled>
+                                <option value="channel-analysis" selected>Channel Analysis (More options coming soon)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="csvFile">Input Data (CSV File):</label>
+                            <button type="button" class="template-button" id="downloadTemplate">
+                                📋 Download Input Data Template
+                            </button>
+                            <div class="file-input-container drag-zone" id="csvDragZone">
+                                <div class="drag-message">Drag & Drop CSV File Here</div>
+                                <div class="file-input-button">or Choose CSV File</div>
+                                <input type="file" id="csvFile" name="csvFile" class="file-input" accept=".csv" required>
+                            </div>
+                            <div id="csvUploadedFile" class="uploaded-file">
+                                <div class="file-info">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-details">
+                                        <div class="file-name"></div>
+                                        <div class="file-size"></div>
+                                    </div>
+                                </div>
+                                <button class="delete-file">Remove</button>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="generate-button" id="generateButton">Generate .hyd File</button>
+                    </form>
+                    
+                    <div class="footer">
+                        <div class="donate-section">
+                            <a href="https://donate.stripe.com/8wM8xHbkZgvz7Be5kl" target="_blank" class="donate-button">
+                                ☕ Buy me a coffee
+                            </a>
+                        </div>
+                        </br></br>HydraulicToolbox Utilities © 2025
+                    </div>
                 </div>
-                <div id="fileName" class="file-name">No file chosen</div>
-            </div>
-            
-            <div id="csvPreviewContainer" class="preview-container" style="display: none;">
-                <h3>CSV Preview</h3>
-                <div id="csvPreview" class="csv-preview"></div>
-            </div>
-            
-            <button type="button" class="generate-button" id="generateButton">Generate .hyd File</button>
-        </form>
-        
-        <div class="footer">
-            HydraulicToolbox Generator &copy; 2025
+            </section>
+
+            <section id="converter" class="tool-section">
+                <h1>Report Converter to CSV</h1>
+                <div class="tool-content">
+                    <div class="form-group">
+                        <label for="hydFile">HYD Report File:</label>
+                        <div class="file-input-container drag-zone" id="hydDragZone">
+                            <div class="drag-message">Drag & Drop DOCX File Here</div>
+                            <div class="file-input-button">or Choose Report File</div>
+                            <input type="file" id="hydFile" name="hydFile" class="file-input" accept=".docx,.rtf" required>
+                        </div>
+                        <div id="hydUploadedFile" class="uploaded-file">
+                            <div class="file-info">
+                                <div class="file-icon">📄</div>
+                                <div class="file-details">
+                                    <div class="file-name"></div>
+                                    <div class="file-size"></div>
+                                </div>
+                            </div>
+                            <button class="delete-file">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="generate-button" id="convertButton">Convert to CSV</button>
+                </div>
+                <div class="footer">
+                    <div class="donate-section">
+                        <a href="https://donate.stripe.com/8wM8xHbkZgvz7Be5kl" target="_blank" class="donate-button">
+                            ☕ Buy me a coffee
+                        </a>
+                    </div>
+                </br></br>HydraulicToolbox Utilities © 2025
+                </div>
+            </section>
         </div>
     </div>
 
+    <!-- help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Help</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>HYD Generator</h3>
+                    <ol>
+                        <li>Enter your project name</li>
+                        <li>Select the calculation type </br> (Only Channel Analysis is available now. The ability to add different analysis will be comming soon. Please consider donating!)</li>
+                        <li>Download the CSV template and populate the file with the data you want to create you HydraulicToolbox file with</li>
+                        <li>Upload the CSV file with your channel data</li>
+                        <li>Click "Generate .hyd File" to create your HydraulicToolbox file</li>
+                    </ol>
+                </div>
+                <div class="help-section">
+                    <h3>Report Converter</h3>
+                    <ol>
+                        <li>Upload a HydraulicToolbox report file (.docx)</li>
+                        <li>Click "Convert to CSV" to generate a CSV file</li>
+                    </ol>
+                </div>
+                <div class="help-section">
+                    <h3>Contact</h3>
+                    <p>
+                        For support or suggestions: jbperezf@gmail.com
+                    </p>
+                </div>
+            </div>
+            <div class="footer">
+                HydraulicToolbox Utilities © 2025
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,16 +1,114 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Modal functionality
+    const modal = document.getElementById('helpModal');
+    const helpButton = document.getElementById('helpButton');
+    const closeButton = modal.querySelector('.close-button');
+
+    helpButton.addEventListener('click', () => {
+        modal.classList.add('show');
+    });
+
+    closeButton.addEventListener('click', () => {
+        modal.classList.remove('show');
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+
+    // Escape key closes modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            modal.classList.remove('show');
+        }
+    });
+
+    // Menu toggle functionality
+    const menuButton = document.querySelector('.menu-button');
+    const sidebar = document.querySelector('.sidebar');
+    const appContainer = document.querySelector('.app-container');
+    
+    function toggleSidebar(show) {
+        if (show) {
+            sidebar.classList.add('active');
+            appContainer.classList.remove('sidebar-hidden');
+        } else {
+            sidebar.classList.remove('active');
+            appContainer.classList.add('sidebar-hidden');
+        }
+    }
+
+    // Only enable menu toggle on mobile
+    if (window.innerWidth <= 768) {
+        toggleSidebar(false);
+    }
+
+    menuButton.addEventListener('click', () => {
+        menuButton.classList.toggle('active');
+        toggleSidebar(menuButton.classList.contains('active'));
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            toggleSidebar(true);
+        } else {
+            toggleSidebar(false);
+        }
+    });
+
+    // Close sidebar when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuButton.contains(e.target) && sidebar.classList.contains('active')) {
+            menuButton.classList.remove('active');
+            sidebar.classList.remove('active');
+            mainContent.classList.remove('shifted');
+        }
+    });
+
+    // Navigation handling
+    document.querySelectorAll('.nav-button').forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button
+            document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Show corresponding section
+            const sectionId = button.dataset.section;
+            document.querySelectorAll('.tool-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        });
+    });
+
+    // File input handler for HYD report converter
+    document.getElementById('hydFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('hydFileName').textContent = file.name;
+        } else {
+            document.getElementById('hydFileName').textContent = 'No file chosen';
+        }
+    });
+
+    // Convert button handler
+    document.getElementById('convertButton').addEventListener('click', function() {
+        const hydFile = document.getElementById('hydFile').files[0];
+        if (!hydFile) {
+            alert('Please select a HYD report file');
+            return;
+        }
+        convertHydToCSV(hydFile);
+    });
+
     // File input handler
     document.getElementById('csvFile').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            const fileName = file.name;
-            document.getElementById('fileName').textContent = fileName;
-            
-            // Parse and preview CSV
-            parseAndDisplayCSV(file);
-        } else {
-            document.getElementById('fileName').textContent = 'No file chosen';
-            document.getElementById('csvPreviewContainer').style.display = 'none';
+            showUploadedFile(this, 'csvDragZone', 'csvUploadedFile');
         }
     });
     
@@ -328,4 +426,245 @@ ENDLININGCALC`;
             return v.toString(16);
         });
     }
+
+    // Function to convert HYD report to CSV
+    function convertHydToCSV(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const arrayBuffer = e.target.result;
+            
+            mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                .then(function(result) {
+                    const text = result.value;
+                    console.log('Extracted text:', text); // Debug log
+                    
+                    if (!text || !text.includes('Channel Analysis:')) {
+                        alert('No channel analysis data found in the document.');
+                        return;
+                    }
+
+                    const csvContent = processReportToCSV(text);
+                    
+                    if (!csvContent || csvContent.split('\n').length <= 1) {
+                        alert('No data could be extracted from the document.');
+                        return;
+                    }
+
+                    // Add BOM for Excel compatibility
+                    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name.replace('.docx', '.csv');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    alert('CSV file created successfully!');
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    alert('Error processing file: ' + error.message);
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function processReportToCSV(text) {
+        console.log('Processing text:', text); // Debug log
+
+        // Define headers based on PowerShell script
+        const headers = [
+            "Channel Analysis", "Channel Type", "Side Slope 1 (Z1) ft/ft", "Side Slope 2 (Z2) ft/ft",
+            "Channel Width ft", "Longitudinal Slope ft/ft", "Manning's n", "Flow cfs", "Depth ft",
+            "Area of Flow ft^2", "Wetted Perimeter ft", "Hydraulic Radius ft", "Average Velocity ft/s",
+            "Top Width ft", "Froude Number", "Critical Depth ft", "Critical Velocity ft/s",
+            "Critical Slope ft/ft", "Critical Top Width ft", "Calculated Max Shear Stress lb/ft^2",
+            "Calculated Avg Shear Stress lb/ft^2"
+        ];
+
+        // Create CSV rows array starting with headers
+        let csvRows = [`"${headers.join('","')}"`];
+
+        // Define regex patterns for data extraction
+        const patterns = {
+            "Channel Type": /Channel Type:\s*([^\r\n]+)/i,
+            "Side Slope 1 (Z1) ft/ft": /Side Slope 1 \(Z1\):\s*([\d.]+)/i,
+            "Side Slope 2 (Z2) ft/ft": /Side Slope 2 \(Z2\):\s*([\d.]+)/i,
+            "Channel Width ft": /Channel Width[: ]*(\d+\.?\d*)/i,
+            "Longitudinal Slope ft/ft": /Longitudinal Slope:\s*([\d.]+)/i,
+            "Manning's n": /Manning'?s n:\s*([\d.]+)/i,
+            "Flow cfs": /Flow[: ]*(\d+\.?\d*)/i,
+            "Depth ft": /Depth[: ]*(\d+\.?\d*)/i,
+            "Area of Flow ft^2": /Area of Flow[: ]*(\d+\.?\d*)/i,
+            "Wetted Perimeter ft": /Wetted Perimeter[: ]*(\d+\.?\d*)/i,
+            "Hydraulic Radius ft": /Hydraulic Radius[: ]*(\d+\.?\d*)/i,
+            "Average Velocity ft/s": /Average Velocity[: ]*(\d+\.?\d*)/i,
+            "Top Width ft": /Top Width[: ]*(\d+\.?\d*)/i,
+            "Froude Number": /Froude Number:\s*([\d.]+)/i,
+            "Critical Depth ft": /Critical Depth[: ]*(\d+\.?\d*)/i,
+            "Critical Velocity ft/s": /Critical Velocity[: ]*(\d+\.?\d*)/i,
+            "Critical Slope ft/ft": /Critical Slope:\s*([\d.]+)/i,
+            "Critical Top Width ft": /Critical Top Width[: ]*(\d+\.?\d*)/i,
+            "Calculated Max Shear Stress lb/ft^2": /(?:Calculated )?Max[imum]* Shear Stress[: ]*(\d+\.?\d*)/i,
+            "Calculated Avg Shear Stress lb/ft^2": /(?:Calculated )?Avg[erage]* Shear Stress[: ]*(\d+\.?\d*)/i
+        };
+
+        // Split by "Channel Analysis:" to get each section
+        const sections = text.split(/Channel Analysis:/g).filter(section => section.trim());
+        console.log('Found sections:', sections.length); // Debug log
+
+        // Process each section
+        sections.forEach((section, index) => {
+            // Extract channel analysis name
+            const lines = section.split(/[\r\n]+/);
+            const channelAnalysis = lines[0].trim().replace(/\s*(?:Notes:|Input Parameters:).*$/, '');
+            console.log(`Processing section ${index + 1}:`, channelAnalysis); // Debug log
+
+            // Create data object with default values
+            const data = {
+                "Channel Analysis": channelAnalysis,
+                "Channel Width ft": "0.00" // Default for triangular channels
+            };
+
+            // Extract all other fields using regex patterns
+            Object.entries(patterns).forEach(([field, pattern]) => {
+                const match = section.match(pattern);
+                if (match) {
+                    data[field] = match[1].trim();
+                    console.log(`Found ${field}:`, data[field]); // Debug log
+                }
+            });
+
+            // Create CSV line with all headers in order
+            const csvLine = headers.map(header => {
+                const value = data[header] || "";
+                return `"${value.replace(/"/g, '""')}"`;  // Properly escape quotes
+            }).join(',');
+
+            csvRows.push(csvLine);
+        });
+
+        const csvContent = csvRows.join('\n');
+        console.log('Generated CSV:', csvContent); // Debug log
+        return csvContent;
+    }
+
+    // Drag and drop functionality
+    function setupDragAndDrop(dragZoneId, fileInputId) {
+        const dragZone = document.getElementById(dragZoneId);
+        const fileInput = document.getElementById(fileInputId);
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dragZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dragZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dragZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dragZone.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            dragZone.classList.remove('drag-over');
+        }
+
+        dragZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+
+    // Setup drag and drop for both file inputs
+    setupDragAndDrop('csvDragZone', 'csvFile');
+    setupDragAndDrop('hydDragZone', 'hydFile');
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' bytes';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        else return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function showUploadedFile(fileInput, dragZoneId, uploadedFileId) {
+        const file = fileInput.files[0];
+        if (file) {
+            const dragZone = document.getElementById(dragZoneId);
+            const uploadedFile = document.getElementById(uploadedFileId);
+            
+            // Update file info
+            uploadedFile.querySelector('.file-name').textContent = file.name;
+            uploadedFile.querySelector('.file-size').textContent = formatFileSize(file.size);
+            
+            // Show uploaded file, hide drag zone
+            dragZone.classList.add('file-uploaded');
+            uploadedFile.classList.add('active');
+            
+            // Handle delete button
+            uploadedFile.querySelector('.delete-file').onclick = () => {
+                fileInput.value = '';
+                dragZone.classList.remove('file-uploaded');
+                uploadedFile.classList.remove('active');
+            };
+        }
+    }
+
+    // Update file input handlers
+    document.getElementById('csvFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            showUploadedFile(this, 'csvDragZone', 'csvUploadedFile');
+        }
+    });
+
+    document.getElementById('hydFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            showUploadedFile(this, 'hydDragZone', 'hydUploadedFile');
+        }
+    });
+
+    // Template download handler
+    document.getElementById('downloadTemplate').addEventListener('click', function() {
+        const headers = [
+            "CHANNELNAME",
+            "CHANNELNOTES",
+            "SIDESLOPE1",
+            "SIDESLOPE2",
+            "WIDTH",
+            "LONGSLOPE",
+            "MANNINGS",
+            "FLOW"
+        ];
+        
+        const csvContent = `"${headers.join('","')}"`;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'hyd_generator_template.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
 });
